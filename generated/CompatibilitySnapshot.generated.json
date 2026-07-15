@@ -1,0 +1,45 @@
+{
+  "_generated": "GENERATED FILE. DO NOT EDIT.",
+  "snapshotVersion": 1,
+  "plugin": {
+    "id": "com.example.superfilter",
+    "manufacturerCode": "ExAu",
+    "pluginCode": "SpFl",
+    "type": "effect"
+  },
+  "parameters": [
+    {
+      "id": "cutoff",
+      "type": "float",
+      "version": 1
+    },
+    {
+      "id": "mode",
+      "type": "choice",
+      "version": 1
+    },
+    {
+      "id": "outputGain",
+      "type": "float",
+      "version": 1
+    },
+    {
+      "id": "resonance",
+      "type": "float",
+      "version": 1
+    }
+  ],
+  "state": {
+    "schemaVersion": 3,
+    "fields": [
+      {
+        "id": "analyzerEnabled",
+        "type": "boolean"
+      },
+      {
+        "id": "selectedTab",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@easy-plugin/builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "plugin": "./bin/plugin.mjs"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.tests.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

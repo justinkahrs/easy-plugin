@@ -1,0 +1,13 @@
+.DS_Store
+.cache/
+.idea/
+.vscode/
+
+build/
+builder/dist/
+cmake-build-*/
+node_modules/
+frontend/build/
+frontend/.svelte-kit/
+frontend/node_modules/
+coverage/

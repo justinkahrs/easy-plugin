@@ -1,0 +1,188 @@
+schemaVersion: 1
+
+builder:
+  minimumVersion: 0.1.0
+  projectVersion: 0.1.0
+
+plugin:
+  id: com.example.superfilter
+  name: Super Filter
+  description: Stereo multimode filter
+  manufacturer:
+    name: Example Audio
+    code: ExAu
+  pluginCode: SpFl
+  version: 0.1.0
+  type: effect
+  category: Fx
+  midiInput: false
+  midiOutput: false
+  midiEffect: false
+  synth: false
+
+platforms:
+  windows:
+    enabled: true
+    architectures:
+      - x86_64
+  macos:
+    enabled: true
+    architectures:
+      - arm64
+      - x86_64
+    universalBinary: true
+  linux:
+    enabled: false
+
+formats:
+  - vst3
+  - au
+  - standalone
+
+buses:
+  inputs:
+    - id: main
+      name: Input
+      role: main
+      optional: false
+      layouts:
+        - mono
+        - stereo
+  outputs:
+    - id: main
+      name: Output
+      role: main
+      optional: false
+      layouts:
+        - mono
+        - stereo
+
+parameterGroups:
+  - id: filter
+    name: Filter
+  - id: output
+    name: Output
+
+parameters:
+  - id: cutoff
+    version: 1
+    name: Cutoff
+    group: filter
+    type: float
+    min: 20
+    max: 20000
+    default: 1000
+    step: 0
+    unit: Hz
+    scale: logarithmic
+    automatable: true
+    hidden: false
+    precision: 1
+    smoothing:
+      type: multiplicative
+      milliseconds: 30
+
+  - id: resonance
+    version: 1
+    name: Resonance
+    group: filter
+    type: float
+    min: 0.1
+    max: 10
+    default: 0.7
+    step: 0
+    automatable: true
+    hidden: false
+    precision: 2
+    smoothing:
+      type: linear
+      milliseconds: 20
+
+  - id: mode
+    version: 1
+    name: Mode
+    group: filter
+    type: choice
+    choices:
+      - Low-pass
+      - High-pass
+      - Band-pass
+    default: Low-pass
+    automatable: true
+    hidden: false
+
+  - id: outputGain
+    version: 1
+    name: Output
+    group: output
+    type: float
+    min: -24
+    max: 12
+    default: 0
+    step: 0.1
+    unit: dB
+    scale: linear
+    automatable: true
+    hidden: false
+    precision: 1
+    smoothing:
+      type: linear
+      milliseconds: 20
+
+state:
+  schemaVersion: 3
+  fields:
+    - id: analyzerEnabled
+      type: boolean
+      default: true
+      persistence: plugin
+    - id: selectedTab
+      type: string
+      default: main
+      persistence: ui
+
+ui:
+  framework: sveltekit
+  width: 720
+  height: 480
+  minWidth: 480
+  minHeight: 320
+  maxWidth: 1440
+  maxHeight: 960
+  resizable: true
+  aspectRatio: 1.5
+  defaultZoom: 1
+  minZoom: 0.75
+  maxZoom: 2
+  renderer: mixed
+
+presets:
+  extension: superfilterpreset
+  factoryDirectory: presets/factory
+  userDirectoryName: Super Filter
+  includeUiState: false
+  categories:
+    - Clean
+    - Creative
+    - Utility
+
+build:
+  cppStandard: 20
+  embedFrontend: true
+  developmentServer: http://localhost:5173
+  juce:
+    version: 8.0.0
+  node:
+    version: 22
+  pnpm:
+    version: 10
+  warningsAsErrors: true
+  enableLtoInRelease: true
+
+features:
+  transport: true
+  presets: true
+  meters: true
+  analyzer: true
+  midi: false
+  sidechain: false
