@@ -1,0 +1,101 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: Example Audio / Super Filter
+      - heading "Native parameters, web precision." [level=1] [ref=e7]: Native parameters,web precision.
+    - generic [ref=e8]: Host synchronized
+  - region "Plugin parameters" [ref=e10]:
+    - generic [ref=e11]:
+      - region [ref=e12]:
+        - generic [ref=e13]:
+          - heading "Filter" [level=2] [ref=e14]
+          - generic [ref=e15]: 3 controls
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: Cutoff
+            - status [ref=e19]: 1000.0 Hz
+          - slider "Cutoff" [active] [ref=e20]: "0.5"
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]: Mode
+            - status [ref=e24]: Low-pass
+          - combobox "Mode" [ref=e25]:
+            - option "Low-pass" [selected]
+            - option "High-pass"
+            - option "Band-pass"
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]: Resonance
+            - status [ref=e29]: "0.70"
+          - slider "Resonance" [ref=e30]: "0.061"
+      - region [ref=e31]:
+        - generic [ref=e32]:
+          - heading "Output" [level=2] [ref=e33]
+          - generic [ref=e34]: 1 controls
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]: Output
+            - status [ref=e38]: 0.0 dB
+          - slider "Output" [ref=e39]: "0.667"
+    - complementary "Runtime diagnostics" [ref=e40]:
+      - generic [ref=e41]:
+        - paragraph [ref=e42]: Runtime
+        - button "Ping" [ref=e43] [cursor=pointer]
+      - region "Live audio visualization" [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: Playing
+          - strong [ref=e47]: 120.0 BPM
+          - generic [ref=e48]: 4/4
+        - generic [ref=e49]:
+          - img "Frequency analyzer" [ref=e50]
+          - generic "Output peak meters" [ref=e53]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - term [ref=e58]: Bridge
+          - definition [ref=e59]: mock
+        - generic [ref=e60]:
+          - term [ref=e61]: Assets
+          - definition [ref=e62]: browser
+        - generic [ref=e63]:
+          - term [ref=e64]: Protocol
+          - definition [ref=e65]: v1
+        - generic [ref=e66]:
+          - term [ref=e67]: Instance
+          - definition [ref=e68]: browser-mock
+        - generic [ref=e69]:
+          - term [ref=e70]: Parameters
+          - definition [ref=e71]: "4"
+        - generic [ref=e72]:
+          - term [ref=e73]: Snapshot
+          - definition [ref=e74]: schema 3
+        - generic [ref=e75]:
+          - term [ref=e76]: Round trip
+          - definition [ref=e77]: not measured
+      - region [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - paragraph [ref=e81]: State & presets
+            - heading "Unsaved state" [level=2] [ref=e82]
+          - button "Delete" [disabled] [ref=e83]
+        - generic [ref=e84]:
+          - generic [ref=e85]: Preset
+          - combobox "Preset" [ref=e86]:
+            - option "Choose a preset" [selected]
+            - option "Factory / Clean Low-pass"
+            - option "Factory / Legacy Resonator"
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: Save current state
+            - textbox "Save current state" [ref=e90]:
+              - /placeholder: Preset name
+          - generic [ref=e91]:
+            - combobox "Preset category" [ref=e92]:
+              - option "Clean" [selected]
+              - option "Creative"
+              - option "Utility"
+            - button "Save" [ref=e93] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - strong [ref=e96]: Analyzer processing
+            - generic [ref=e97]: Persistent plugin state
+          - checkbox "Analyzer processing Persistent plugin state" [checked] [ref=e98]

@@ -6,6 +6,8 @@ class FakeBackend implements JuceBackend {
   readonly commands: unknown[] = [];
   #listener: ((payload: unknown) => void) | undefined;
 
+  constructor(private readonly announceReadyImmediately = false) {}
+
   addEventListener(_: string, listener: (payload: unknown) => void): [string, number] {
     this.#listener = listener;
     return ['easyPlugin.event', 1];
@@ -18,6 +20,10 @@ class FakeBackend implements JuceBackend {
   emitEvent(_: string, payload: unknown): void {
     this.commands.push(payload);
     if (!isRecord(payload) || !isRecord(payload['payload'])) return;
+    if (payload['payload']['type'] === 'bridge.frontendReady' && this.announceReadyImmediately) {
+      this.fire(readyEnvelope());
+      return;
+    }
     if (payload['payload']['type'] !== 'state.requestSnapshot') return;
     this.fire({
       protocolVersion: 1,
@@ -44,18 +50,21 @@ describe('NativeBridge protocol validation', () => {
     expect(() => new NativeBridge(runtime)).toThrow('Unsupported native protocol 99');
   });
 
-  it('waits for bridge.ready and a correlated state snapshot', async () => {
-    const backend = new FakeBackend();
+  it('handles bridge.ready synchronously after installing the event listener', async () => {
+    const backend = new FakeBackend(true);
     const bridge = new NativeBridge(createRuntime(backend));
+    expect(backend.commands.map(commandType)).toEqual(['bridge.frontendReady']);
     const initialization = bridge.initialize();
 
-    backend.fire(readyEnvelope());
     await expect(initialization).resolves.toMatchObject({
       instanceId: 'instance',
       capabilities: { presets: true },
       snapshot: { schemaVersion: 3, parameters: { cutoff: 0.5 } }
     });
-    expect(backend.commands).toHaveLength(1);
+    expect(backend.commands.map(commandType)).toEqual([
+      'bridge.frontendReady',
+      'state.requestSnapshot'
+    ]);
   });
 
   it('rejects unsupported native event envelopes immediately', async () => {
@@ -80,6 +89,7 @@ describe('NativeBridge protocol validation', () => {
     const bridge = new NativeBridge(createRuntime(backend));
     const received: unknown[] = [];
     bridge.subscribe((event) => received.push(event));
+    backend.commands.length = 0;
 
     bridge.setStateField('analyzerEnabled', false);
     bridge.listPresets();

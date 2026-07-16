@@ -41,6 +41,8 @@ Frontend loads
     |
 Frontend subscribes to native events
     |
+Frontend sends bridge.frontendReady
+    |
 Native sends bridge.ready
     |
 Frontend validates protocol version
@@ -58,6 +60,7 @@ The frontend must remain functional in mock mode without JUCE.
 
 ```ts
 type FrontendCommand =
+  | BridgeFrontendReadyCommand
   | ParameterBeginGestureCommand
   | ParameterSetNormalizedCommand
   | ParameterEndGestureCommand
@@ -74,6 +77,17 @@ type FrontendCommand =
   | VisualizationUnsubscribeCommand
   | BridgePingCommand
 ```
+
+### Announce frontend readiness
+
+```ts
+type BridgeFrontendReadyCommand = {
+  type: "bridge.frontendReady"
+}
+```
+
+The frontend sends this only after registering its native-event listener. Native
+responds with `bridge.ready`, avoiding a race with the WebView page-load callback.
 
 ### Begin parameter gesture
 

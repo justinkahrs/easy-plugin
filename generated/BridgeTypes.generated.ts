@@ -22,6 +22,7 @@ export type ParameterCommand =
 
 export type FrontendCommand =
   | ParameterCommand
+  | { readonly type: 'bridge.frontendReady' }
   | { readonly type: 'state.requestSnapshot' }
   | { readonly type: 'state.setField'; readonly fieldId: StateFieldId; readonly value: unknown }
   | { readonly type: 'preset.list' }

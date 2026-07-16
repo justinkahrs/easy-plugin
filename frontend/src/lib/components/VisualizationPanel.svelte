@@ -43,13 +43,18 @@
 </section>
 
 <style>
-  .visualization { margin: 22px 0 4px; border: 1px solid #3a3f34; background: #11140f; }
+  .visualization {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #3a3f34;
+    background: #11140f;
+  }
   .transport {
     display: grid;
     grid-template-columns: 1fr auto auto;
     align-items: baseline;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 6px 10px;
     border-bottom: 1px solid #30352c;
     color: #7f8777;
     font-size: 0.65rem;
@@ -59,10 +64,33 @@
   .transport span.active::before { background: #a9c980; }
   .transport strong { color: #dfe2da; font-family: ui-monospace, monospace; font-size: 0.7rem; }
   .transport small { font-family: ui-monospace, monospace; }
-  .scope { display: grid; grid-template-columns: 1fr 12px; gap: 8px; height: 94px; padding: 10px; }
-  svg { width: 100%; height: 100%; overflow: visible; }
-  .grid { fill: none; stroke: #282d25; stroke-width: 0.6; }
-  polyline { fill: none; stroke: #a9c980; stroke-width: 1.25; vector-effect: non-scaling-stroke; }
-  .meters { display: flex; gap: 3px; align-items: flex-end; }
-  .meters i { display: block; width: 4px; height: 100%; background: linear-gradient(to top, #a9c980 calc(var(--level) * 100%), #30362c calc(var(--level) * 100%)); }
+  .scope {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    gap: 8px;
+    height: 70px;
+    overflow: hidden;
+    padding: 7px 9px;
+  }
+  svg { display: block; width: 100%; height: 100%; overflow: hidden; }
+  .grid { fill: none; stroke: #30362c; stroke-width: 0.7; }
+  polyline { fill: none; stroke: #a9c980; stroke-width: 1.35; vector-effect: non-scaling-stroke; }
+  .meters {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    min-height: 0;
+    padding-left: 5px;
+    border-left: 1px solid #30362c;
+  }
+  .meters i {
+    display: block;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(to top, #a9c980 calc(var(--level) * 100%), #353b31 calc(var(--level) * 100%));
+  }
+
+  @media (max-height: 420px) {
+    .scope { height: 56px; }
+  }
 </style>

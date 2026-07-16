@@ -30,18 +30,10 @@ juce::var makeInitialisationData(const juce::String& instanceId)
 class PluginWebView::Browser final : public juce::WebBrowserComponent
 {
 public:
-    Browser(PluginWebView& ownerIn, const Options& options)
-        : WebBrowserComponent(options), owner(ownerIn)
+    explicit Browser(const Options& options)
+        : WebBrowserComponent(options)
     {
     }
-
-    void pageFinishedLoading(const juce::String&) override
-    {
-        owner.pageFinishedLoading();
-    }
-
-private:
-    PluginWebView& owner;
 };
 
 PluginWebView::PluginWebView(
@@ -54,7 +46,7 @@ PluginWebView::PluginWebView(
     : instanceId(instanceIdIn),
       dispatcher(instanceId, parameters, state, presets, transport, visualization, *this)
 {
-    browser = std::make_unique<Browser>(*this, createBrowserOptions());
+    browser = std::make_unique<Browser>(createBrowserOptions());
     addAndMakeVisible(*browser);
     browser->goToURL(getStartUrl());
 }
@@ -71,11 +63,6 @@ void PluginWebView::emitBridgeEvent(const juce::var& envelope)
 {
     if (browser != nullptr)
         browser->emitEventIfBrowserIsVisible(nativeEventId, envelope);
-}
-
-void PluginWebView::pageFinishedLoading()
-{
-    dispatcher.frontendLoaded();
 }
 
 juce::WebBrowserComponent::Options PluginWebView::createBrowserOptions()

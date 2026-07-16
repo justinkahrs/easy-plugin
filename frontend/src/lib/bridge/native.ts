@@ -109,6 +109,9 @@ export class NativeBridge implements RuntimeBridge {
     this.#listenerToken = backend.addEventListener(nativeEventId, (value) => {
       this.#handleNativeEvent(value);
     });
+    // The native page-load callback can run before application modules install their
+    // event listeners. This explicit handshake makes bridge.ready replayable per load.
+    this.#emit({ type: 'bridge.frontendReady' }, this.#nextId('ready'));
   }
 
   initialize(): Promise<RuntimeSession> {

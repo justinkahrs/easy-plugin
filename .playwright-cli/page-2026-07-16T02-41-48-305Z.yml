@@ -1,0 +1,101 @@
+- main [ref=e100]:
+  - generic [ref=e101]:
+    - generic [ref=e102]:
+      - paragraph [ref=e103]: Example Audio / Super Filter
+      - heading "Native parameters, web precision." [level=1] [ref=e104]: Native parameters,web precision.
+    - generic [ref=e105]: Host synchronized
+  - region "Plugin parameters" [ref=e107]:
+    - generic [ref=e108]:
+      - region [ref=e109]:
+        - generic [ref=e110]:
+          - heading "Filter" [level=2] [ref=e111]
+          - generic [ref=e112]: 3 controls
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - generic [ref=e115]: Cutoff
+            - status [ref=e116]: 632.5 Hz
+          - slider "Cutoff" [active] [ref=e117]: "0.5"
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - generic [ref=e120]: Mode
+            - status [ref=e121]: Low-pass
+          - combobox "Mode" [ref=e122]:
+            - option "Low-pass" [selected]
+            - option "High-pass"
+            - option "Band-pass"
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - generic [ref=e125]: Resonance
+            - status [ref=e126]: "0.70"
+          - slider "Resonance" [ref=e127]: "0.061"
+      - region [ref=e128]:
+        - generic [ref=e129]:
+          - heading "Output" [level=2] [ref=e130]
+          - generic [ref=e131]: 1 controls
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]: Output
+            - status [ref=e135]: 0.0 dB
+          - slider "Output" [ref=e136]: "0.667"
+    - complementary "Runtime diagnostics" [ref=e137]:
+      - generic [ref=e138]:
+        - paragraph [ref=e139]: Runtime
+        - button "Ping" [ref=e140] [cursor=pointer]
+      - region "Live audio visualization" [ref=e141]:
+        - generic [ref=e142]:
+          - generic [ref=e143]: Playing
+          - strong [ref=e144]: 120.0 BPM
+          - generic [ref=e145]: 4/4
+        - generic [ref=e146]:
+          - img "Frequency analyzer" [ref=e147]
+          - generic "Output peak meters" [ref=e150]
+      - generic [ref=e153]:
+        - generic [ref=e154]:
+          - term [ref=e155]: Bridge
+          - definition [ref=e156]: mock
+        - generic [ref=e157]:
+          - term [ref=e158]: Assets
+          - definition [ref=e159]: browser
+        - generic [ref=e160]:
+          - term [ref=e161]: Protocol
+          - definition [ref=e162]: v1
+        - generic [ref=e163]:
+          - term [ref=e164]: Instance
+          - definition [ref=e165]: browser-mock
+        - generic [ref=e166]:
+          - term [ref=e167]: Parameters
+          - definition [ref=e168]: "4"
+        - generic [ref=e169]:
+          - term [ref=e170]: Snapshot
+          - definition [ref=e171]: schema 3
+        - generic [ref=e172]:
+          - term [ref=e173]: Round trip
+          - definition [ref=e174]: not measured
+      - region [ref=e175]:
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - paragraph [ref=e178]: State & presets
+            - heading "Unsaved state" [level=2] [ref=e179]
+          - button "Delete" [disabled] [ref=e180]
+        - generic [ref=e181]:
+          - generic [ref=e182]: Preset
+          - combobox "Preset" [ref=e183]:
+            - option "Choose a preset" [selected]
+            - option "Factory / Clean Low-pass"
+            - option "Factory / Legacy Resonator"
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e186]: Save current state
+            - textbox "Save current state" [ref=e187]:
+              - /placeholder: Preset name
+          - generic [ref=e188]:
+            - combobox "Preset category" [ref=e189]:
+              - option "Clean" [selected]
+              - option "Creative"
+              - option "Utility"
+            - button "Save" [ref=e190] [cursor=pointer]
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - strong [ref=e193]: Analyzer processing
+            - generic [ref=e194]: Persistent plugin state
+          - checkbox "Analyzer processing Persistent plugin state" [checked] [ref=e195]

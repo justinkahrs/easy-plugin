@@ -57,6 +57,18 @@ juce::var snapshotCommand(const juce::String& instanceId)
     envelope.getDynamicObject()->setProperty("payload", payload);
     return envelope;
 }
+
+juce::var frontendReadyCommand(const juce::String& instanceId)
+{
+    auto payload = juce::var{new juce::DynamicObject()};
+    payload.getDynamicObject()->setProperty("type", "bridge.frontendReady");
+    auto envelope = juce::var{new juce::DynamicObject()};
+    envelope.getDynamicObject()->setProperty("protocolVersion", 1);
+    envelope.getDynamicObject()->setProperty("instanceId", instanceId);
+    envelope.getDynamicObject()->setProperty("requestId", "frontend-ready");
+    envelope.getDynamicObject()->setProperty("payload", payload);
+    return envelope;
+}
 }
 
 int main()
@@ -180,6 +192,7 @@ int main()
         processor.getTransportService(),
         processor.getVisualizationService(),
         collector};
+    dispatcher.handleCommand(frontendReadyCommand(processor.getInstanceId()));
     dispatcher.handleCommand(snapshotCommand(processor.getInstanceId()));
     const auto* snapshot = collector.lastPayload();
     const auto* pluginState = snapshot == nullptr

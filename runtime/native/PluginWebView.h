@@ -28,7 +28,6 @@ private:
     class Browser;
 
     void emitBridgeEvent(const juce::var& envelope) override;
-    void pageFinishedLoading();
 
     [[nodiscard]] juce::WebBrowserComponent::Options createBrowserOptions();
     [[nodiscard]] static juce::String getStartUrl();

@@ -80,7 +80,11 @@
 </section>
 
 <style>
-  .preset-browser { display: grid; gap: 18px; padding: 30px; border-top: 1px solid #30342b; }
+  .preset-browser {
+    display: grid;
+    gap: 16px;
+    padding: 0 0 6px;
+  }
   .heading, .save-row, .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .eyebrow { margin: 0 0 6px; color: #899080; font-size: 0.68rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; }
   h2 { margin: 0; font-size: 1rem; font-weight: 580; }

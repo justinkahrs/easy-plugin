@@ -92,8 +92,8 @@
 <style>
   .control {
     display: grid;
-    gap: 12px;
-    padding: 18px 0;
+    gap: 9px;
+    padding: 14px 0;
     border-top: 1px solid #34382f;
   }
 

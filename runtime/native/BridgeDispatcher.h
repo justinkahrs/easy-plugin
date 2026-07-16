@@ -97,6 +97,7 @@ private:
     TransportService& transport;
     VisualizationService& visualization;
     BridgeEventSink& eventSink;
+    bool frontendReady{};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BridgeDispatcher)
 };

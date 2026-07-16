@@ -14,6 +14,7 @@ public:
     explicit PluginEditor(PluginProcessor& processorIn);
     ~PluginEditor() override;
 
+    void paint(juce::Graphics& graphics) override;
     void resized() override;
 
 private:

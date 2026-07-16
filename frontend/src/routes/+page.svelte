@@ -1,16 +1,14 @@
 <script lang="ts">
   import '@fontsource-variable/geist';
   import { onMount } from 'svelte';
-  import { createRuntimeBridge, type RuntimeBridge, type RuntimeSession } from '$lib/bridge';
+  import { createRuntimeBridge, type RuntimeBridge } from '$lib/bridge';
   import ParameterControl from '$lib/components/ParameterControl.svelte';
   import PresetBrowser from '$lib/components/PresetBrowser.svelte';
   import VisualizationPanel from '$lib/components/VisualizationPanel.svelte';
   import {
     getParameterMetadata,
-    parameterMetadata,
     svelteParameterGroups,
     svelteParameterMetadata,
-    type ParameterId,
     type SvelteParameterMetadata
   } from '$lib/generated';
   import {
@@ -35,15 +33,12 @@
   let controller: ParameterController | undefined;
   let stateController: StatePresetController | undefined;
   let visualizationController: VisualizationController | undefined;
-  let runtimeSession: RuntimeSession | undefined;
   let parameterValues = {} as ParameterValues;
   let pluginState: Readonly<Record<string, unknown>> = {};
   let presets: readonly PresetInfo[] = [];
   let currentPreset: PresetStatus = { dirty: false };
   let status: 'loading' | 'ready' | 'error' = 'loading';
   let errorMessage = '';
-  let latencyMs: number | undefined;
-  let pinging = false;
   let transport: TransportChangedEvent | undefined;
   let meters: MeterFrameEvent | undefined;
   let analyzer: AnalyzerSnapshot | undefined;
@@ -90,9 +85,8 @@
       stateController.initialize(),
       visualizationController.initialize()
     ])
-      .then(([session]) => {
+      .then(() => {
         if (!active) return;
-        runtimeSession = session;
         status = 'ready';
       })
       .catch((error: unknown) => {
@@ -119,21 +113,6 @@
     };
   });
 
-  async function measureBridge(): Promise<void> {
-    if (bridge === undefined || pinging) return;
-    pinging = true;
-    try {
-      latencyMs = await bridge.ping();
-    } catch (error: unknown) {
-      errorMessage = error instanceof Error ? error.message : 'The bridge ping failed.';
-    } finally {
-      pinging = false;
-    }
-  }
-
-  function valueFor(id: ParameterId): number {
-    return parameterValues[id] ?? 0;
-  }
 </script>
 
 <svelte:head>
@@ -143,14 +122,14 @@
 
 <main>
   <header>
-    <div>
+    <div class="header-meta">
       <p class="eyebrow">Example Audio / Super Filter</p>
-      <h1>Native parameters,<br />web precision.</h1>
+      <div class="connection" class:ready={status === 'ready'}>
+        <span aria-hidden="true"></span>
+        {status === 'ready' ? 'Host synchronized' : status === 'error' ? 'Runtime error' : 'Awaiting snapshot'}
+      </div>
     </div>
-    <div class="connection" class:ready={status === 'ready'}>
-      <span aria-hidden="true"></span>
-      {status === 'ready' ? 'Host synchronized' : status === 'error' ? 'Runtime error' : 'Awaiting snapshot'}
-    </div>
+    <VisualizationPanel {transport} {meters} {analyzer} />
   </header>
 
   <section class="workspace" aria-label="Plugin parameters">
@@ -172,7 +151,7 @@
             {#each controls.filter((control) => control.groupId === group.id) as control (control.id)}
               <ParameterControl
                 parameter={getParameterMetadata(control.id)}
-                normalizedValue={valueFor(control.id)}
+                normalizedValue={parameterValues[control.id] ?? 0}
                 {controller}
               />
             {/each}
@@ -185,7 +164,7 @@
             {#each ungroupedControls as control (control.id)}
               <ParameterControl
                 parameter={getParameterMetadata(control.id)}
-                normalizedValue={valueFor(control.id)}
+                normalizedValue={parameterValues[control.id] ?? 0}
                 {controller}
               />
             {/each}
@@ -194,28 +173,7 @@
       {/if}
     </div>
 
-    <aside aria-label="Runtime diagnostics">
-      <div class="diagnostic-heading">
-        <p class="eyebrow">Runtime</p>
-        <button type="button" disabled={pinging || status !== 'ready'} onclick={measureBridge}>
-          {pinging ? 'Measuring' : 'Ping'}
-        </button>
-      </div>
-
-      <VisualizationPanel {transport} {meters} {analyzer} />
-
-      {#if runtimeSession}
-        <dl>
-          <div><dt>Bridge</dt><dd>{runtimeSession.mode}</dd></div>
-          <div><dt>Assets</dt><dd>{runtimeSession.assetSource.replace('-', ' ')}</dd></div>
-          <div><dt>Protocol</dt><dd>v{runtimeSession.protocolVersion}</dd></div>
-          <div><dt>Instance</dt><dd title={runtimeSession.instanceId}>{runtimeSession.instanceId.slice(0, 12)}</dd></div>
-          <div><dt>Parameters</dt><dd>{parameterMetadata.length}</dd></div>
-          <div><dt>Snapshot</dt><dd>schema {runtimeSession.snapshot.schemaVersion}</dd></div>
-          <div><dt>Round trip</dt><dd>{latencyMs === undefined ? 'not measured' : `${Math.round(latencyMs)} ms`}</dd></div>
-        </dl>
-      {/if}
-
+    <aside aria-label="State and presets">
       {#if errorMessage && status !== 'error'}
         <p class="inline-error" role="alert">{errorMessage}</p>
       {/if}
@@ -235,14 +193,19 @@
 <style>
   :global(*) { box-sizing: border-box; }
   :global(html) {
+    width: 100%;
+    height: 100%;
     min-width: 320px;
+    overflow: hidden;
     background: #10120f;
     color-scheme: dark;
     font-family: 'Geist Variable', system-ui, sans-serif;
   }
   :global(body) {
     margin: 0;
-    min-height: 100dvh;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     background:
       linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
@@ -252,29 +215,35 @@
   }
   :global(button), :global(input), :global(select) { font: inherit; }
 
-  main { min-height: 100dvh; }
+  main {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
   header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 32px;
-    padding: 42px 48px 36px;
+    display: grid;
+    gap: 9px;
+    min-width: 0;
+    padding: 12px 20px 11px;
     border-bottom: 1px solid #30342b;
   }
-  .eyebrow, dt, button, .group-heading span {
+  .header-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-width: 0;
+  }
+  .eyebrow, .group-heading span {
     margin: 0;
     color: #899080;
     font-size: 0.68rem;
     font-weight: 650;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-  }
-  h1 {
-    margin: 16px 0 0;
-    font-size: clamp(2.25rem, 5vw, 4.6rem);
-    font-weight: 520;
-    letter-spacing: -0.055em;
-    line-height: 0.94;
   }
   .connection {
     display: flex;
@@ -293,57 +262,60 @@
   .workspace {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(230px, 0.34fr);
-    min-height: 460px;
+    min-height: 0;
+    overflow: hidden;
   }
   .parameter-panel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
     gap: 1px;
     background: #30342b;
   }
-  .group { padding: 30px 36px; background: rgba(20, 23, 18, 0.97); }
+  .group {
+    min-width: 0;
+    min-height: 100%;
+    padding: 19px 28px 24px;
+    background: rgba(20, 23, 18, 0.97);
+  }
   .group-heading {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 20px;
-    padding-bottom: 20px;
+    padding-bottom: 12px;
   }
   h2 { margin: 0; font-size: 1.05rem; font-weight: 580; }
-  aside { padding: 30px; border-left: 1px solid #30342b; background: rgba(25, 28, 23, 0.96); }
-  .diagnostic-heading { display: flex; align-items: center; justify-content: space-between; }
-  button {
-    padding: 8px 12px;
-    border: 1px solid #505648;
-    border-radius: 3px;
-    background: transparent;
-    color: #dfe2d9;
-    cursor: pointer;
-  }
-  button:disabled { cursor: default; opacity: 0.45; }
-  dl { margin: 25px 0 0; }
-  dl div {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 13px 0;
-    border-top: 1px solid #3a3f34;
-  }
-  dd {
-    overflow: hidden;
-    margin: 0;
-    color: #dfe2da;
-    font-family: 'Geist Mono', ui-monospace, monospace;
-    font-size: 0.76rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  aside {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 20px;
+    border-left: 1px solid #30342b;
+    background: rgba(25, 28, 23, 0.96);
   }
   .empty-state, .error-state { grid-column: 1 / -1; min-height: 400px; margin: 0; padding: 40px; background: #151813; }
   .error-state p, .inline-error { color: #e8a998; line-height: 1.5; }
-  .inline-error { margin-top: 28px; font-size: 0.78rem; }
+  .inline-error { margin: 0 0 20px; font-size: 0.78rem; }
   @media (max-width: 680px) {
-    header { padding: 28px; }
-    .workspace, .parameter-panel { grid-template-columns: 1fr; }
+    header { padding: 10px 12px; }
+    .workspace {
+      grid-template-columns: 1fr;
+      overflow: auto;
+    }
+    .parameter-panel {
+      grid-template-columns: 1fr;
+      align-content: start;
+      overflow: visible;
+    }
+    .group { min-height: 0; }
     aside { border-top: 1px solid #30342b; border-left: 0; }
+  }
+
+  @media (max-height: 420px) {
+    header { gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+    .group { padding-top: 14px; }
   }
 </style>

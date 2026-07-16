@@ -38,6 +38,11 @@ public:
         return events.empty() ? nullptr : events.back().getDynamicObject();
     }
 
+    [[nodiscard]] std::size_t getEventCount() const noexcept
+    {
+        return events.size();
+    }
+
 private:
     std::vector<juce::var> events;
 };
@@ -132,7 +137,12 @@ int main()
             processor->getVisualizationService(),
             collector};
 
-        dispatcher.frontendLoaded();
+        if (collector.getEventCount() != 0)
+            return 28;
+        dispatcher.handleCommand(makeCommand(
+            processor->getInstanceId(),
+            "frontend-ready",
+            "bridge.frontendReady"));
         const auto* readyEnvelope = collector.getLastEnvelope();
         const auto* ready = collector.findLastPayload("bridge.ready");
         if (readyEnvelope == nullptr || ready == nullptr)
@@ -221,6 +231,10 @@ int main()
             reopenedCollector};
         reopenedDispatcher.handleCommand(makeCommand(
             processor->getInstanceId(),
+            "frontend-ready-reopened",
+            "bridge.frontendReady"));
+        reopenedDispatcher.handleCommand(makeCommand(
+            processor->getInstanceId(),
             "snapshot-reopened",
             "state.requestSnapshot"));
         const auto* snapshot = reopenedCollector.findLastPayload("state.snapshot");
@@ -276,6 +290,18 @@ int main()
         auto editor = std::unique_ptr<juce::AudioProcessorEditor>{processor->createEditor()};
         if (editor == nullptr || editor->getWidth() != 720 || editor->getHeight() != 480)
             return 22;
+        auto hasResizeHandle = false;
+        auto webViewLeavesResizeStripVisible = false;
+        for (auto childIndex = 0; childIndex < editor->getNumChildComponents(); ++childIndex)
+        {
+            auto* child = editor->getChildComponent(childIndex);
+            if (dynamic_cast<juce::ResizableCornerComponent*>(child) != nullptr)
+                hasResizeHandle = true;
+            else if (child != nullptr)
+                webViewLeavesResizeStripVisible = child->getBottom() <= editor->getHeight() - 18;
+        }
+        if (!editor->isResizable() || !hasResizeHandle || !webViewLeavesResizeStripVisible)
+            return 29;
         if (processor->getVisualizationService().getListenerCountForTesting() != 1)
             return 25;
     }

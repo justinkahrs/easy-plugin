@@ -53,6 +53,7 @@ BridgeDispatcher::~BridgeDispatcher()
 
 void BridgeDispatcher::frontendLoaded()
 {
+    frontendReady = true;
     emitReady();
 }
 
@@ -87,6 +88,11 @@ void BridgeDispatcher::handleCommand(const juce::var& command)
     }
 
     const auto type = payload->getProperty("type").toString();
+    if (type == "bridge.frontendReady")
+    {
+        frontendLoaded();
+        return;
+    }
     if (type == "bridge.ping")
     {
         const auto timestamp = payload->getProperty("timestamp");
@@ -237,6 +243,9 @@ void BridgeDispatcher::analyzerFrame(
 
 void BridgeDispatcher::emitPayload(juce::var payload, const juce::String& requestId)
 {
+    if (!frontendReady)
+        return;
+
     auto envelope = makeObject();
     auto* object = envelope.getDynamicObject();
     object->setProperty("protocolVersion", protocolVersion);
