@@ -27,23 +27,29 @@ BridgeDispatcher::BridgeDispatcher(
     PresetService& presetsIn,
     TransportService& transportIn,
     VisualizationService& visualizationIn,
-    BridgeEventSink& eventSinkIn)
+    BridgeEventSink& eventSinkIn,
+    BridgeExtension* extensionIn)
     : instanceId(std::move(instanceIdIn)),
       parameters(parametersIn),
       state(stateIn),
       presets(presetsIn),
       transport(transportIn),
       visualization(visualizationIn),
-      eventSink(eventSinkIn)
+      eventSink(eventSinkIn),
+      extension(extensionIn)
 {
     parameters.addListener(*this);
     state.addListener(*this);
     presets.addListener(*this);
     visualization.addListener(*this);
+    if (extension != nullptr)
+        extension->setEventSink(this);
 }
 
 BridgeDispatcher::~BridgeDispatcher()
 {
+    if (extension != nullptr)
+        extension->setEventSink(nullptr);
     visualization.removeListener(*this);
     presets.removeListener(*this);
     state.removeListener(*this);
@@ -134,8 +140,15 @@ void BridgeDispatcher::handleCommand(const juce::var& command)
         handleParameterCommand(type, *payload, requestId);
         return;
     }
+    if (extension != nullptr && extension->handleBridgeCommand(type, *payload, requestId))
+        return;
 
     emitError(requestId, "bridge", "unknown-command", "Unknown bridge command '" + type + "'.");
+}
+
+void BridgeDispatcher::emitExtensionEvent(juce::var payload, const juce::String& requestId)
+{
+    emitPayload(std::move(payload), requestId);
 }
 
 void BridgeDispatcher::parameterChangedFromNative(

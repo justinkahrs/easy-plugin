@@ -32,6 +32,14 @@ if(NOT EXISTS "${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.cmake")
   message(FATAL_ERROR "Generated plugin metadata is missing. Run `pnpm generate` before configuring CMake.")
 endif()
 include("${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.cmake")
+if(APPLE AND EASY_PLUGIN_MACOS_UNIVERSAL_BINARY)
+  set(
+    CMAKE_OSX_ARCHITECTURES
+    "${EASY_PLUGIN_MACOS_ARCHITECTURES}"
+    CACHE STRING "Architectures required by the plugin manifest"
+    FORCE
+  )
+endif()
 set_property(
   DIRECTORY
   APPEND
@@ -154,6 +162,7 @@ if(EASY_PLUGIN_BUILD_STANDALONE)
       generated/StateMetadata.generated.h
       runtime/native/BridgeDispatcher.cpp
       runtime/native/BridgeDispatcher.h
+      runtime/native/BridgeExtension.h
       runtime/native/ParameterService.cpp
       runtime/native/ParameterService.h
       runtime/native/PresetService.cpp

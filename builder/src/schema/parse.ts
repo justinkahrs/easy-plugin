@@ -267,7 +267,7 @@ export function validateManifest(value: unknown): PluginManifest {
   const plugin = parsePlugin(reader, reader.childRecord(root, 'plugin', 'plugin'));
   const platforms = parsePlatforms(reader, reader.childRecord(root, 'platforms', 'platforms'));
   const formats = parseFormats(reader, root, platforms.macos.enabled);
-  const buses = parseBuses(reader, reader.childRecord(root, 'buses', 'buses'), plugin.type);
+  const buses = parseBuses(reader, reader.childRecord(root, 'buses', 'buses'), plugin);
   const parameterGroups = parseParameterGroups(reader, root);
   const parameters = parseParameters(reader, root, parameterGroups);
   const state = parseState(reader, reader.childRecord(root, 'state', 'state'), parameters);
@@ -439,11 +439,21 @@ function parseFormats(reader: Reader, root: UnknownRecord, macosEnabled: boolean
 function parseBuses(
   reader: Reader,
   object: UnknownRecord,
-  pluginType: PluginType
+  plugin: PluginIdentity
 ): PluginManifest['buses'] {
   const inputs = parseBusDirection(reader, object, 'inputs');
   const outputs = parseBusDirection(reader, object, 'outputs');
   const mainOutputs = outputs.filter((bus) => bus.role === 'main');
+
+  if (plugin.midiEffect) {
+    if (inputs.length > 0) {
+      reader.issue('buses.inputs', 'midi_effect_audio_bus', 'MIDI effects must not declare audio input buses.');
+    }
+    if (outputs.length > 0) {
+      reader.issue('buses.outputs', 'midi_effect_audio_bus', 'MIDI effects must not declare audio output buses.');
+    }
+    return { inputs, outputs };
+  }
 
   if (mainOutputs.length !== 1) {
     reader.issue('buses.outputs', 'invalid_main_output_count', 'must contain exactly one main output bus.');
@@ -451,8 +461,8 @@ function parseBuses(
   if (mainOutputs.some((bus) => bus.optional)) {
     reader.issue('buses.outputs', 'optional_main_output', 'the main output bus must not be optional.');
   }
-  if (!['instrument', 'midi-instrument'].includes(pluginType) && inputs.length === 0) {
-    reader.issue('buses.inputs', 'missing_input_bus', `${pluginType} plugins require an input bus.`);
+  if (!['instrument', 'midi-instrument'].includes(plugin.type) && inputs.length === 0) {
+    reader.issue('buses.inputs', 'missing_input_bus', `${plugin.type} plugins require an input bus.`);
   }
 
   return { inputs, outputs };
@@ -903,6 +913,19 @@ function validateFeatureConsistency(
   inputs: readonly BusDefinition[],
   features: FeatureConfiguration
 ): void {
+  if (plugin.midiEffect && !plugin.midiInput) {
+    reader.issue('plugin.midiInput', 'midi_effect_requires_input', 'must be true for a MIDI effect.');
+  }
+  if (plugin.midiEffect && !plugin.midiOutput) {
+    reader.issue('plugin.midiOutput', 'midi_effect_requires_output', 'must be true for a MIDI effect.');
+  }
+  if (plugin.midiEffect && plugin.synth) {
+    reader.issue('plugin.synth', 'midi_effect_synth_conflict', 'must be false for a MIDI effect.');
+  }
+  if (plugin.midiEffect && !features.midi) {
+    reader.issue('features.midi', 'disabled_midi_feature', 'must be true for a MIDI effect.');
+  }
+
   const sidechainInputs = inputs.filter((bus) => bus.role === 'sidechain');
   if ((features.sidechain || plugin.type === 'sidechain-effect') && sidechainInputs.length === 0) {
     reader.issue('buses.inputs', 'missing_sidechain_bus', 'sidechain support requires an optional sidechain input bus.');

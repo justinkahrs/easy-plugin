@@ -406,7 +406,7 @@ ${reads}
 
 void ParameterSmoothers::prepare(double sampleRate, const ParameterValues& initialValues) noexcept
 {
-    const auto safeSampleRate = std::max(1.0, sampleRate);
+${smoothed.length === 0 ? '    static_cast<void>(sampleRate);' : '    const auto safeSampleRate = std::max(1.0, sampleRate);'}
 ${prepares}
     reset(initialValues);
 }

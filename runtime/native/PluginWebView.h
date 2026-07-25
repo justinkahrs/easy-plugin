@@ -19,7 +19,8 @@ public:
         PresetService& presets,
         TransportService& transport,
         VisualizationService& visualization,
-        const juce::String& instanceId);
+        const juce::String& instanceId,
+        BridgeExtension* extension = nullptr);
     ~PluginWebView() override;
 
     void resized() override;

@@ -176,6 +176,65 @@ describe('manifest schema validation', () => {
     );
   });
 
+  test('accepts a busless MIDI effect and rejects inconsistent MIDI effect declarations', () => {
+    const manifest = mutableExampleManifest();
+    manifest.plugin.midiInput = true;
+    manifest.plugin.midiOutput = true;
+    manifest.plugin.midiEffect = true;
+    manifest.features = {
+      ...(manifest.features as Record<string, unknown>),
+      midi: true
+    };
+    manifest.buses.inputs = [];
+    manifest.buses.outputs = [];
+
+    expect(() => parseManifest(JSON.stringify(manifest))).not.toThrow();
+
+    expectManifestIssue(
+      (invalid) => {
+        invalid.plugin.midiEffect = true;
+        invalid.plugin.midiInput = false;
+        invalid.plugin.midiOutput = true;
+        invalid.features = {
+          ...(invalid.features as Record<string, unknown>),
+          midi: true
+        };
+        invalid.buses.inputs = [];
+        invalid.buses.outputs = [];
+      },
+      'plugin.midiInput',
+      'midi_effect_requires_input'
+    );
+
+    expectManifestIssue(
+      (invalid) => {
+        invalid.plugin.midiEffect = true;
+        invalid.plugin.midiInput = true;
+        invalid.plugin.midiOutput = true;
+        invalid.features = {
+          ...(invalid.features as Record<string, unknown>),
+          midi: true
+        };
+        invalid.buses.inputs = [{
+          id: 'main',
+          name: 'Input',
+          role: 'main',
+          optional: false,
+          layouts: ['stereo']
+        }];
+        invalid.buses.outputs = [{
+          id: 'main',
+          name: 'Output',
+          role: 'main',
+          optional: false,
+          layouts: ['stereo']
+        }];
+      },
+      'buses.inputs',
+      'midi_effect_audio_bus'
+    );
+  });
+
   test('rejects unsupported disabled bus combinations', () => {
     expectManifestIssue(
       (manifest) => {
