@@ -49,11 +49,11 @@ void PluginProcessor::processBlock(
     juce::MidiBuffer& midi)
 {
     const auto noDenormals = juce::ScopedNoDenormals{};
-    const auto* playHead = getPlayHead();
+    const auto* currentPlayHead = getPlayHead();
     transportService.capture(
-        playHead == nullptr
+        currentPlayHead == nullptr
             ? juce::Optional<juce::AudioPlayHead::PositionInfo>{}
-            : playHead->getPosition());
+            : currentPlayHead->getPosition());
     const auto inputChannels = getTotalNumInputChannels();
     const auto outputChannels = getTotalNumOutputChannels();
     for (auto channel = inputChannels; channel < outputChannels; ++channel)
