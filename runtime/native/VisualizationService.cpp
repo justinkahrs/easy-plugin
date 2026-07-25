@@ -44,7 +44,14 @@ void MeterAccumulator::capture(const juce::AudioBuffer<float>& audio) noexcept
                    previousPeak, peak, std::memory_order_relaxed, std::memory_order_relaxed))
         {
         }
-        squareSums[channel].fetch_add(squareSum, std::memory_order_relaxed);
+        auto previousSquareSum = squareSums[channel].load(std::memory_order_relaxed);
+        while (!squareSums[channel].compare_exchange_weak(
+            previousSquareSum,
+            previousSquareSum + squareSum,
+            std::memory_order_relaxed,
+            std::memory_order_relaxed))
+        {
+        }
         sampleCounts[channel].fetch_add(count, std::memory_order_relaxed);
     }
 }
