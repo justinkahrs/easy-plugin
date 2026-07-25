@@ -16,11 +16,29 @@ endforeach()
 
 file(MAKE_DIRECTORY "${EASY_PLUGIN_EMBED_DIR}")
 
-execute_process(
-  COMMAND
+if(WIN32)
+  set(
+    frontend_build_command
+    cmd.exe
+    /d
+    /s
+    /c
+    call
     "${EASY_PLUGIN_PNPM_EXECUTABLE}"
     --dir "${EASY_PLUGIN_FRONTEND_DIR}"
     build
+  )
+else()
+  set(
+    frontend_build_command
+    "${EASY_PLUGIN_PNPM_EXECUTABLE}"
+    --dir "${EASY_PLUGIN_FRONTEND_DIR}"
+    build
+  )
+endif()
+
+execute_process(
+  COMMAND ${frontend_build_command}
   RESULT_VARIABLE frontend_build_result
   COMMAND_ECHO STDOUT
 )
