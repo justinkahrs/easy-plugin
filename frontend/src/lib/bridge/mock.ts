@@ -364,14 +364,14 @@ function createFactoryPresets(): MockPreset[] {
   const defaults = createDefaultValues();
   return [
     {
-      info: { id: 'factory:clean-low-pass', name: 'Clean Low-pass', category: 'Clean', factory: true },
-      parameters: { ...defaults, cutoff: 0.62, mode: 0, outputGain: 0.6666667, resonance: 0.0606061 },
-      pluginState: { analyzerEnabled: true }
-    },
-    {
-      info: { id: 'factory:legacy-resonator', name: 'Legacy Resonator', category: 'Creative', factory: true },
-      parameters: { ...defaults, cutoff: 0.43, mode: 1, outputGain: 0.5833333, resonance: 0.72 },
-      pluginState: { analyzerEnabled: false }
+      info: {
+        id: 'factory:default',
+        name: 'Default',
+        category: presetConfiguration.categories[0],
+        factory: true
+      },
+      parameters: defaults,
+      pluginState: createDefaultState('plugin')
     }
   ];
 }

@@ -5,7 +5,6 @@
   export let controller: StatePresetController;
   export let presets: readonly PresetInfo[];
   export let current: PresetStatus;
-  export let analyzerEnabled: boolean;
 
   let name = '';
   let category: string = presetConfiguration.categories[0] ?? '';
@@ -23,10 +22,6 @@
 
   function deleteCurrent(): void {
     if (current.id !== undefined) controller.deletePreset(current.id);
-  }
-
-  function setAnalyzer(event: Event): void {
-    controller.setField('analyzerEnabled', (event.currentTarget as HTMLInputElement).checked);
   }
 
   function isCurrentFactory(): boolean {
@@ -73,10 +68,6 @@
     </div>
   </form>
 
-  <label class="toggle-row">
-    <span><strong>Analyzer processing</strong><small>Persistent plugin state</small></span>
-    <input type="checkbox" checked={analyzerEnabled} onchange={setAnalyzer} />
-  </label>
 </section>
 
 <style>
@@ -85,11 +76,11 @@
     gap: 16px;
     padding: 0 0 6px;
   }
-  .heading, .save-row, .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .heading, .save-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .eyebrow { margin: 0 0 6px; color: #899080; font-size: 0.68rem; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; }
   h2 { margin: 0; font-size: 1rem; font-weight: 580; }
   .field { display: grid; gap: 7px; }
-  .field span, small { color: #899080; font-size: 0.72rem; }
+  .field span { color: #899080; font-size: 0.72rem; }
   input, select, button { font: inherit; }
   input, select { width: 100%; padding: 9px 10px; border: 1px solid #454b3e; border-radius: 3px; background: #171a15; color: #edf0e7; }
   form { display: grid; gap: 9px; }
@@ -97,7 +88,4 @@
   button.delete { padding: 6px 9px; background: transparent; color: #b8bdb2; }
   button:disabled { cursor: default; opacity: 0.35; }
   .save-row select { flex: 1; }
-  .toggle-row span { display: grid; gap: 3px; }
-  .toggle-row strong { font-size: 0.82rem; font-weight: 570; }
-  .toggle-row input { width: 18px; height: 18px; accent-color: #a9c980; }
 </style>

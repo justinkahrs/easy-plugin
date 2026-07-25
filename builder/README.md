@@ -1,6 +1,7 @@
 # Builder
 
-The builder owns manifest parsing, validation, compatibility checks, and deterministic source generation.
+The builder validates `plugin.yaml`, checks released compatibility, generates the
+manifest-owned source set, and runs plugin validation.
 
 From the repository root:
 
@@ -8,5 +9,15 @@ From the repository root:
 pnpm generate
 ```
 
-The workspace command builds the TypeScript CLI and runs `plugin generate` against `plugin.yaml` when present, otherwise `plugin.example.yaml`. The generator may replace `generated/` and never writes to `native/src/` or `frontend/src/`.
+Generation may replace `generated/`. It never writes to `native/src/` or
+`frontend/src/`.
 
+The CLI currently exposes:
+
+```sh
+pnpm exec plugin generate
+pnpm exec plugin validate
+```
+
+Run `pnpm exec plugin help` for options. New copies of the repository should use
+the root `pnpm template:init` workflow once before ordinary generation.

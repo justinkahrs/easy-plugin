@@ -1,5 +1,7 @@
 # Milestone Prompt: Transport, MIDI, Visualization, and Validation
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 9 and 11 from `IMPLEMENTATION_PLAN.md`.
 
 ## Scope

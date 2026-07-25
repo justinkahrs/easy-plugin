@@ -1,5 +1,7 @@
 # Milestone Prompt: CLI, Packaging, CI, and Upgrades
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 10, 12, 13, and 14 from `IMPLEMENTATION_PLAN.md`.
 
 ## Scope

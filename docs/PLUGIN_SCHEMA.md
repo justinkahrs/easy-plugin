@@ -1,5 +1,7 @@
 # Plugin Manifest Schema
 
+This reference documents the `plugin.yaml` contract used by the template.
+
 ## Purpose
 
 `plugin.yaml` is the source of truth for generated plugin identity, build formats, buses, parameters, state, UI configuration, presets, and build behavior.

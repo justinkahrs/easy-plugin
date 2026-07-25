@@ -1,5 +1,7 @@
 # Milestone Prompt: Native Plugin Runtime and Bridge
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 4 and 5 from `IMPLEMENTATION_PLAN.md`.
 
 ## Scope

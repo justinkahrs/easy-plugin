@@ -6,6 +6,10 @@ export {
   type ParameterMetadata
 } from '../../../generated/ParameterMetadata.generated.js';
 export {
+  pluginMetadata,
+  type PluginMetadata
+} from '../../../generated/PluginMetadata.generated.js';
+export {
   svelteParameterGroups,
   svelteParameterMetadata,
   type SvelteParameterGroupMetadata,

@@ -1,4 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import {
+  bridgeCapabilities,
+  parameterMetadata,
+  stateFieldMetadata,
+  stateSchemaVersion
+} from '$lib/generated';
+import { getDefaultNormalizedValue } from '$lib/parameter-values';
 import type { JuceBackend, JuceRuntime } from './juce-runtime';
 import { NativeBridge } from './native';
 
@@ -31,10 +38,15 @@ class FakeBackend implements JuceBackend {
       requestId: payload['requestId'],
       payload: {
         type: 'state.snapshot',
-        schemaVersion: 3,
-        parameters: { cutoff: 0.5, mode: 0, outputGain: 0.5, resonance: 0.25 },
-        pluginState: {},
-        uiState: {}
+        schemaVersion: stateSchemaVersion,
+        parameters: Object.fromEntries(
+          parameterMetadata.map((parameter) => [
+            parameter.id,
+            getDefaultNormalizedValue(parameter)
+          ])
+        ),
+        pluginState: generatedStateDefaults('plugin'),
+        uiState: generatedStateDefaults('ui')
       }
     });
   }
@@ -53,13 +65,20 @@ describe('NativeBridge protocol validation', () => {
   it('handles bridge.ready synchronously after installing the event listener', async () => {
     const backend = new FakeBackend(true);
     const bridge = new NativeBridge(createRuntime(backend));
+    const firstParameter = parameterMetadata[0];
+    if (firstParameter === undefined) throw new Error('The template fixture requires one parameter.');
     expect(backend.commands.map(commandType)).toEqual(['bridge.frontendReady']);
     const initialization = bridge.initialize();
 
     await expect(initialization).resolves.toMatchObject({
       instanceId: 'instance',
-      capabilities: { presets: true },
-      snapshot: { schemaVersion: 3, parameters: { cutoff: 0.5 } }
+      capabilities: bridgeCapabilities,
+      snapshot: {
+        schemaVersion: stateSchemaVersion,
+        parameters: {
+          [firstParameter.id]: getDefaultNormalizedValue(firstParameter)
+        }
+      }
     });
     expect(backend.commands.map(commandType)).toEqual([
       'bridge.frontendReady',
@@ -91,32 +110,41 @@ describe('NativeBridge protocol validation', () => {
     bridge.subscribe((event) => received.push(event));
     backend.commands.length = 0;
 
-    bridge.setStateField('analyzerEnabled', false);
+    const stateField = stateFieldMetadata[0];
+    if (stateField !== undefined) bridge.setStateField(stateField.id, stateField.default);
     bridge.listPresets();
-    bridge.loadPreset('factory:clean-low-pass');
+    bridge.loadPreset('factory:default');
     bridge.savePreset('Saved', 'Clean', ['test']);
     bridge.deletePreset('user:one');
     expect(backend.commands.map(commandType)).toEqual([
-      'state.setField',
+      ...(stateField === undefined ? [] : ['state.setField']),
       'preset.list',
       'preset.load',
       'preset.save',
       'preset.delete'
     ]);
 
-    backend.fire(eventEnvelope({
-      type: 'state.fieldChanged',
-      fieldId: 'analyzerEnabled',
-      value: false,
-      source: 'state'
-    }));
+    if (stateField !== undefined) {
+      backend.fire(eventEnvelope({
+        type: 'state.fieldChanged',
+        fieldId: stateField.id,
+        value: stateField.default,
+        source: 'state'
+      }));
+    }
     backend.fire(eventEnvelope({
       type: 'preset.list',
-      presets: [{ id: 'factory:clean-low-pass', name: 'Clean Low-pass', factory: true }]
+      presets: [{ id: 'factory:default', name: 'Default', factory: true }]
     }));
     backend.fire(eventEnvelope({ type: 'preset.dirtyChanged', dirty: true }));
     expect(received).toEqual([
-      expect.objectContaining({ type: 'state.fieldChanged', value: false }),
+      ...(stateField === undefined
+        ? []
+        : [expect.objectContaining({
+            type: 'state.fieldChanged',
+            fieldId: stateField.id,
+            value: stateField.default
+          })]),
       expect.objectContaining({ type: 'preset.list', presets: [expect.objectContaining({ factory: true })] }),
       { type: 'preset.dirtyChanged', dirty: true }
     ]);
@@ -207,14 +235,18 @@ function readyEnvelope(): Record<string, unknown> {
       type: 'bridge.ready',
       protocolVersion: 1,
       capabilities: {
-        presets: true,
-        transport: true,
-        meters: true,
-        analyzer: true,
-        midi: false
+        ...bridgeCapabilities
       }
     }
   };
+}
+
+function generatedStateDefaults(persistence: 'plugin' | 'ui'): Record<string, unknown> {
+  return Object.fromEntries(
+    stateFieldMetadata
+      .filter((field) => field.persistence === persistence)
+      .map((field) => [field.id, structuredClone(field.default)])
+  );
 }
 
 function eventEnvelope(payload: Record<string, unknown>): Record<string, unknown> {

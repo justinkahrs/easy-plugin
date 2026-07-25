@@ -90,6 +90,19 @@ describe('deterministic generated output', () => {
     }
   });
 
+  test('generates frontend branding and feature metadata from the manifest', async () => {
+    const project = await createTemporaryProject();
+    await generateProject({ manifestPath: project.manifestPath, outputDirectory: project.generated });
+    const metadata = await readFile(
+      path.join(project.generated, 'PluginMetadata.generated.ts'),
+      'utf8'
+    );
+
+    expect(metadata).toContain('"name": "Super Filter"');
+    expect(metadata).toContain('"name": "Example Audio"');
+    expect(metadata).toContain('"analyzer": true');
+  });
+
   test('generates real-time DSP helpers and versioned state/preset contracts', async () => {
     const project = await createTemporaryProject();
     await generateProject({ manifestPath: project.manifestPath, outputDirectory: project.generated });

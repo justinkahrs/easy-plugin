@@ -24,6 +24,7 @@ export const generatedFileNames = [
   'Parameters.generated.h',
   'PluginMetadata.generated.cmake',
   'PluginMetadata.generated.h',
+  'PluginMetadata.generated.ts',
   'StateMetadata.generated.cpp',
   'StateMetadata.generated.h',
   'StateMetadata.generated.ts',
@@ -50,6 +51,7 @@ export function renderGeneratedFiles(manifest: PluginManifest): ReadonlyMap<stri
     ['Parameters.generated.h', renderParametersHeader(manifest)],
     ['PluginMetadata.generated.cmake', renderCmakeMetadata(manifest)],
     ['PluginMetadata.generated.h', renderPluginMetadata(manifest)],
+    ['PluginMetadata.generated.ts', renderPluginMetadataTypescript(manifest)],
     ['StateMetadata.generated.cpp', renderStateMetadataSource(manifest)],
     ['StateMetadata.generated.h', renderStateMetadataHeader(manifest)],
     ['StateMetadata.generated.ts', renderStateMetadataTypescript(manifest)],
@@ -121,6 +123,51 @@ inline constexpr UiConstraints ui{
     ${cppDouble(manifest.ui.defaultZoom)}
 };
 }
+`;
+}
+
+function renderPluginMetadataTypescript(manifest: PluginManifest): string {
+  return `${typescriptHeader}export interface PluginMetadata {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly manufacturer: Readonly<{
+    name: string;
+    code: string;
+  }>;
+  readonly pluginCode: string;
+  readonly version: string;
+  readonly type: string;
+  readonly features: Readonly<{
+    presets: boolean;
+    transport: boolean;
+    meters: boolean;
+    analyzer: boolean;
+    midi: boolean;
+    sidechain: boolean;
+  }>;
+}
+
+export const pluginMetadata = ${typescriptValue({
+    id: manifest.plugin.id,
+    name: manifest.plugin.name,
+    description: manifest.plugin.description ?? '',
+    manufacturer: {
+      name: manifest.plugin.manufacturer.name,
+      code: manifest.plugin.manufacturer.code
+    },
+    pluginCode: manifest.plugin.pluginCode,
+    version: manifest.plugin.version,
+    type: manifest.plugin.type,
+    features: {
+      presets: manifest.features.presets,
+      transport: manifest.features.transport,
+      meters: manifest.features.meters,
+      analyzer: manifest.features.analyzer,
+      midi: manifest.features.midi,
+      sidechain: manifest.features.sidechain
+    }
+  })} as const satisfies PluginMetadata;
 `;
 }
 

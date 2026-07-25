@@ -1,5 +1,7 @@
 # Implementation Plan
 
+> Archived construction document. Current plugin work should follow the root `AGENTS.md`.
+
 ## Strategy
 
 Implement the system as a sequence of vertical milestones.

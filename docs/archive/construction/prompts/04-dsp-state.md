@@ -1,5 +1,7 @@
 # Milestone Prompt: DSP, State, and Presets
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 6 through 8 from `IMPLEMENTATION_PLAN.md`.
 
 ## Scope

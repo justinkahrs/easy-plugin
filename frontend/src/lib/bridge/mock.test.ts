@@ -1,11 +1,21 @@
 import { get } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
+import {
+  parameterMetadata,
+  stateFieldMetadata,
+  stateSchemaVersion,
+  type NativeEvent,
+  type PresetListEvent,
+  type PresetSavedEvent
+} from '$lib/generated';
 import { createParameterController } from '$lib/parameter-store';
 import { MockBridge } from './mock';
-import type { NativeEvent, PresetListEvent, PresetSavedEvent } from '$lib/generated';
+
+const firstParameter = parameterMetadata[0];
+if (firstParameter === undefined) throw new Error('The template fixture requires one parameter.');
 
 describe('MockBridge parameter runtime', () => {
-  it('initializes with a complete state snapshot and answers ping', async () => {
+  it('initializes with a complete generated state snapshot and answers ping', async () => {
     const bridge = new MockBridge('test-instance');
     const session = await bridge.initialize();
 
@@ -14,32 +24,32 @@ describe('MockBridge parameter runtime', () => {
       instanceId: 'test-instance',
       mode: 'mock',
       assetSource: 'browser',
-      snapshot: { schemaVersion: 3, pluginState: { analyzerEnabled: true } }
+      snapshot: {
+        schemaVersion: stateSchemaVersion,
+        pluginState: generatedStateDefaults('plugin')
+      }
     });
-    expect(Object.keys(session.snapshot.parameters)).toEqual([
-      'cutoff',
-      'mode',
-      'outputGain',
-      'resonance'
-    ]);
+    expect(Object.keys(session.snapshot.parameters)).toEqual(
+      parameterMetadata.map((parameter) => parameter.id)
+    );
     await expect(bridge.ping()).resolves.toBeGreaterThan(0);
 
     bridge.dispose();
     await expect(bridge.ping()).rejects.toThrow('disposed');
   });
 
-  it('records continuous and discrete gesture boundaries', () => {
+  it('records gesture boundaries for generated parameter IDs', () => {
     const bridge = new MockBridge();
-    bridge.beginParameterGesture('cutoff');
-    bridge.setParameterNormalized('cutoff', 0.25);
-    bridge.setParameterNormalized('cutoff', 0.5);
-    bridge.endParameterGesture('cutoff');
+    bridge.beginParameterGesture(firstParameter.id);
+    bridge.setParameterNormalized(firstParameter.id, 0.25);
+    bridge.setParameterNormalized(firstParameter.id, 0.5);
+    bridge.endParameterGesture(firstParameter.id);
 
     expect(bridge.getGestureLog()).toEqual([
-      { type: 'begin', parameterId: 'cutoff' },
-      { type: 'update', parameterId: 'cutoff', value: 0.25 },
-      { type: 'update', parameterId: 'cutoff', value: 0.5 },
-      { type: 'end', parameterId: 'cutoff' }
+      { type: 'begin', parameterId: firstParameter.id },
+      { type: 'update', parameterId: firstParameter.id, value: 0.25 },
+      { type: 'update', parameterId: firstParameter.id, value: 0.5 },
+      { type: 'end', parameterId: firstParameter.id }
     ]);
   });
 
@@ -48,16 +58,16 @@ describe('MockBridge parameter runtime', () => {
     const controller = createParameterController(bridge);
     await controller.initialize();
 
-    controller.setDiscrete('mode', 0.5);
-    expect(get(controller.values).mode).toBe(0.5);
+    controller.setDiscrete(firstParameter.id, 0.5);
+    expect(get(controller.values)[firstParameter.id]).toBe(0.5);
     expect(bridge.getGestureLog().slice(-3)).toEqual([
-      { type: 'begin', parameterId: 'mode' },
-      { type: 'update', parameterId: 'mode', value: 0.5 },
-      { type: 'end', parameterId: 'mode' }
+      { type: 'begin', parameterId: firstParameter.id },
+      { type: 'update', parameterId: firstParameter.id, value: 0.5 },
+      { type: 'end', parameterId: firstParameter.id }
     ]);
 
-    bridge.simulateHostParameterChange('cutoff', 0.75);
-    expect(get(controller.values).cutoff).toBe(0.75);
+    bridge.simulateHostParameterChange(firstParameter.id, 0.75);
+    expect(get(controller.values)[firstParameter.id]).toBe(0.75);
 
     controller.dispose();
     bridge.dispose();
@@ -66,10 +76,10 @@ describe('MockBridge parameter runtime', () => {
   it('keeps simultaneous mock instances isolated', async () => {
     const first = new MockBridge('first');
     const second = new MockBridge('second');
-    first.setParameterNormalized('resonance', 0.1);
+    first.setParameterNormalized(firstParameter.id, 0.1);
 
-    expect((await first.requestStateSnapshot()).parameters.resonance).toBe(0.1);
-    expect((await second.requestStateSnapshot()).parameters.resonance).not.toBe(0.1);
+    expect((await first.requestStateSnapshot()).parameters[firstParameter.id]).toBe(0.1);
+    expect((await second.requestStateSnapshot()).parameters[firstParameter.id]).not.toBe(0.1);
   });
 
   it('round-trips presets, protects factory presets, and tracks dirty state', async () => {
@@ -79,27 +89,33 @@ describe('MockBridge parameter runtime', () => {
 
     bridge.listPresets();
     const list = events.find((event): event is PresetListEvent => event.type === 'preset.list');
-    expect(list?.presets).toHaveLength(2);
+    expect(list?.presets).toHaveLength(1);
 
-    bridge.loadPreset('factory:legacy-resonator');
-    expect((await bridge.requestStateSnapshot())).toMatchObject({
-      parameters: { cutoff: 0.43 },
-      pluginState: { analyzerEnabled: false },
-      preset: { id: 'factory:legacy-resonator', dirty: false }
+    bridge.loadPreset('factory:default');
+    expect((await bridge.requestStateSnapshot()).preset).toMatchObject({
+      id: 'factory:default',
+      dirty: false
     });
 
-    bridge.setParameterNormalized('cutoff', 0.7);
+    bridge.setParameterNormalized(firstParameter.id, 0.7);
     expect((await bridge.requestStateSnapshot()).preset?.dirty).toBe(true);
 
-    bridge.deletePreset('factory:legacy-resonator');
+    bridge.deletePreset('factory:default');
     expect(events.at(-1)).toMatchObject({ type: 'error', code: 'factory-preset-protected' });
 
-    bridge.setStateField('analyzerEnabled', true);
     bridge.savePreset('My Preset', 'Clean', ['test']);
     const saved = events.findLast((event): event is PresetSavedEvent => event.type === 'preset.saved');
     expect(saved?.presetId).toMatch(/^user:/);
-    bridge.setStateField('analyzerEnabled', false);
+    bridge.setParameterNormalized(firstParameter.id, 0.2);
     bridge.loadPreset(String(saved?.presetId));
-    expect((await bridge.requestStateSnapshot()).pluginState).toEqual({ analyzerEnabled: true });
+    expect((await bridge.requestStateSnapshot()).parameters[firstParameter.id]).toBe(0.7);
   });
 });
+
+function generatedStateDefaults(persistence: 'plugin' | 'ui'): Record<string, unknown> {
+  return Object.fromEntries(
+    stateFieldMetadata
+      .filter((field) => field.persistence === persistence)
+      .map((field) => [field.id, structuredClone(field.default)])
+  );
+}

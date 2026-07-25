@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getParameterMetadata } from '$lib/generated';
+import { parameterMetadata, type ParameterMetadata } from '$lib/generated';
 import {
   denormalizeParameterValue,
   getDefaultNormalizedValue,
@@ -7,9 +7,12 @@ import {
 } from '$lib/parameter-values';
 
 describe('generated parameter value conversion', () => {
-  it('round-trips logarithmic and linear values through normalized host space', () => {
-    for (const id of ['cutoff', 'outputGain', 'resonance'] as const) {
-      const parameter = getParameterMetadata(id);
+  const generatedParameters: readonly ParameterMetadata[] = parameterMetadata;
+
+  it('round-trips numeric values through normalized host space', () => {
+    for (const parameter of generatedParameters.filter(
+      (item) => item.type === 'float' || item.type === 'integer'
+    )) {
       const defaultNormalized = getDefaultNormalizedValue(parameter);
       const restored = denormalizeParameterValue(parameter, defaultNormalized);
       expect(restored).toBeTypeOf('number');
@@ -18,8 +21,10 @@ describe('generated parameter value conversion', () => {
     }
   });
 
-  it('maps choice defaults to their host-visible normalized index', () => {
-    expect(getDefaultNormalizedValue(getParameterMetadata('mode'))).toBe(0);
-    expect(denormalizeParameterValue(getParameterMetadata('mode'), 0.5)).toBe('High-pass');
+  it('maps generated choice defaults to their host-visible normalized index', () => {
+    for (const parameter of generatedParameters.filter((item) => item.type === 'choice')) {
+      const normalized = getDefaultNormalizedValue(parameter);
+      expect(denormalizeParameterValue(parameter, normalized)).toBe(parameter.default);
+    }
   });
 });

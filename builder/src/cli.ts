@@ -121,15 +121,12 @@ function requiredOptionValue(
 }
 
 async function findDefaultManifest(): Promise<string> {
-  for (const candidate of ['plugin.yaml', 'plugin.example.yaml']) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Continue to the fallback or produce the actionable error below.
-    }
+  try {
+    await access('plugin.yaml');
+    return 'plugin.yaml';
+  } catch {
+    throw new Error('No manifest found. Expected plugin.yaml in the current directory.');
   }
-  throw new Error('No manifest found. Expected plugin.yaml or plugin.example.yaml in the current directory.');
 }
 
 function printHelp(): void {
@@ -141,7 +138,7 @@ Commands:
 
 Generate options:
 
-  -m, --manifest <path>  Manifest file (defaults to plugin.yaml, then plugin.example.yaml)
+  -m, --manifest <path>  Manifest file (defaults to plugin.yaml)
   -o, --output <path>    Generated output directory (defaults to generated)
 
 Validate options:

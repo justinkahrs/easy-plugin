@@ -8,7 +8,7 @@ import { ManifestValidationError } from '../src/schema/errors.js';
 import { validateManifest } from '../src/schema/parse.js';
 
 export const exampleManifestPath = fileURLToPath(
-  new URL('../../plugin.example.yaml', import.meta.url)
+  new URL('../../plugin.yaml', import.meta.url)
 );
 export const exampleManifestSource = readFileSync(exampleManifestPath, 'utf8');
 

@@ -1,142 +1,144 @@
-# Agent Instructions
+# Agent Instructions — Audio Plugin Template
 
-## Objective
+## Repository role
 
-Build a reusable, schema-driven audio plugin template that generates working JUCE plugins with a SvelteKit user interface.
+This repository is a starting point for one new audio plugin. Treat the checked-in
+Super Filter as a working example to replace, not as the product being maintained.
 
-The system must support:
+The template already provides the JUCE/Svelte runtime, generation pipeline, state,
+presets, visualization transport, validation, and CI foundation. Do not resume the
+archived construction roadmap unless the user explicitly asks to develop the
+template framework itself.
 
-- VST3
-- Audio Unit on macOS
-- Standalone application
-- JUCE 8
-- C++20
-- CMake
-- SvelteKit
-- TypeScript
-- Vite
-- pnpm
-- Embedded production frontend assets
-- Development frontend hot reload
-- Typed communication between Svelte and JUCE
-- Schema-generated parameters
-- Host automation
-- State persistence
-- State migration
-- Plugin validation
-- Cross-platform CI
-
-## Core principles
-
-1. The plugin manifest is the source of truth.
-2. Generated files must never contain user-authored code.
-3. Users must not edit generated files.
-4. Parameter identifiers must remain stable after release.
-5. Native code owns all audio-affecting state.
-6. The frontend owns presentation-only state.
-7. Audio buffers must never cross the WebView bridge.
-8. No allocations, locks, logging, file I/O, JSON parsing, or frontend calls may occur on the audio thread.
-9. The Svelte editor must be disposable and reconstruct itself from native state whenever opened.
-10. Production plugins must function without internet access.
-11. Every generated project must include automated validation.
-12. Generated projects must be upgradeable without overwriting user code.
-
-## Required architecture
+The available project CLI commands are currently:
 
 ```text
-plugin.yaml
-    |
-schema validator
-    |
-code generator
-    |-- C++ parameter declarations
-    |-- TypeScript parameter declarations
-    |-- bridge bindings
-    |-- CMake metadata
-    |-- default Svelte controls
-    |-- validation tests
-    |-- CI configuration
-    |
-SvelteKit editor
-    |
-JUCE WebBrowserComponent bridge
-    |
-JUCE AudioProcessor and APVTS
-    |
-user-owned DSP implementation
+plugin generate
+plugin validate
 ```
 
-## Repository ownership boundaries
+Do not claim that `plugin create`, `package`, `doctor`, or `upgrade` exist.
 
-Generated code belongs in:
+## Starting a new plugin
+
+When the manifest still uses `com.example.superfilter`, help the user define and
+replace the sample identity and schema before adapting DSP or UI code.
+
+1. Edit `plugin.yaml`.
+2. Replace the sample plugin name, reverse-domain ID, manufacturer name and
+   four-character code, plugin four-character code, preset extension, and preset
+   directory.
+3. Define buses, parameters, state fields, feature flags, and build formats.
+4. Run `pnpm template:init` exactly once to release the shipped sample
+   compatibility baseline and generate the new plugin baseline.
+5. Adapt the user-owned DSP, presets, migrations, and UI.
+
+After initialization, use `pnpm generate`; do not run `pnpm template:init` again.
+
+## Source of truth and ownership
+
+`plugin.yaml` is the source of truth for identity, formats, buses, parameters,
+state fields, UI constraints, presets, and feature flags.
+
+Generated code lives in:
 
 ```text
 generated/
 ```
 
-User-authored code belongs in:
+The generator may replace that directory. Never hand-edit generated files.
+
+Plugin-specific, user-owned code lives in:
 
 ```text
 native/src/
 frontend/src/
 ```
 
-Framework runtime code belongs in:
+The most important customization points are:
+
+- `native/src/DspProcessor.*` — audio and MIDI behavior
+- `native/src/FactoryPresets.*` — factory preset definitions
+- `native/src/StateMigrations.*` — migrations for released state schemas
+- `frontend/src/routes/+page.svelte` — editor composition
+- `frontend/src/lib/components/` — plugin-specific controls and views
+
+Reusable framework code lives in:
 
 ```text
 runtime/
+builder/
 ```
 
-The generator may replace files under `generated/`.
+Change framework code only when the requested behavior is broadly reusable or the
+plugin cannot be implemented safely in user-owned files.
 
-The generator must not replace user-owned files.
+## Compatibility rules
 
-## Coding rules
+- Treat plugin ID, manufacturer code, plugin code, parameter IDs, and released
+  parameter types as permanent after the new baseline is established.
+- Add new parameters instead of renaming released parameter IDs.
+- Increase state schema versions and add sequential migrations when persistent
+  state changes.
+- Regenerate immediately after every manifest change.
+- Generated TypeScript branding and feature metadata must drive generic UI labels;
+  do not hard-code the sample product identity into reusable components.
 
-- Use C++20.
-- Use TypeScript strict mode.
-- Use explicit error handling.
-- Avoid global mutable state.
-- Every plugin instance must have isolated state.
-- Use deterministic code generation.
-- Sort generated output consistently.
-- Generated files must include a warning that they are generated.
-- Keep transport, parameters, state, UI, and DSP as separate modules.
-- Treat host-supplied transport fields as optional.
+## Runtime boundaries
+
+- Native code owns all audio-affecting state.
+- The frontend owns presentation-only state.
+- The editor is disposable and must reconstruct itself from native state.
+- Audio and MIDI buffers never cross the WebView bridge.
 - Preserve MIDI sample offsets.
-- Smooth continuous parameters where configured.
-- Reject unsupported channel layouts.
-- Support multiple simultaneous plugin instances.
-- Use binary or packed numeric transport for high-frequency visual data where practical.
-- Do not send analyzer buffers as large JSON object graphs.
+- Treat host transport fields as optional.
+- Keep plugin instances isolated.
+- Release builds must work without a development server or internet connection.
 
-## Required developer commands
+The audio thread must not allocate, lock, log, access files, parse JSON, call the
+frontend, or perform blocking work.
 
-```text
-plugin create
-plugin generate
-plugin dev
-plugin build
-plugin test
-plugin validate
-plugin package
-plugin doctor
-plugin upgrade
+## Normal workflow
+
+```sh
+pnpm install --frozen-lockfile
+pnpm generate
+pnpm check
+pnpm test
+
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
 ```
 
-## Definition of done
+For frontend hot reload:
 
-A task is not complete until:
+```sh
+pnpm dev
+```
 
-- The code builds from a clean checkout.
-- Tests pass.
-- Generated output is deterministic.
-- The standalone target opens.
-- The WebView loads the embedded Svelte frontend.
-- Parameter updates work in both directions.
-- Parameter gestures are visible to the host.
-- State survives save and reload.
-- The plugin editor can close and reopen.
-- Multiple plugin instances remain isolated.
-- Release builds contain no development-server dependency.
-- Validation commands produce actionable failures.
+For an offline production build:
+
+```sh
+cmake --preset release
+cmake --build --preset release
+ctest --preset release
+pnpm exec plugin validate --build-vst3-validator
+```
+
+## Definition of done for plugin work
+
+A plugin change is complete only when:
+
+- `plugin.yaml` accurately describes the product.
+- Generated output is current and deterministic.
+- User-authored code remains outside `generated/`.
+- Frontend checks and tests pass.
+- Native Debug or Release targets build as appropriate.
+- Native tests pass.
+- DSP remains finite and real-time safe across supported layouts, sample rates,
+  and block sizes.
+- Parameter changes work in both UI-to-host and host-to-UI directions.
+- State and presets survive save/reload and editor recreation.
+- Multiple instances remain isolated.
+- Release validation reports no development-server dependency.

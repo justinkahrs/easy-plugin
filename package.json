@@ -13,6 +13,7 @@
     "check": "pnpm --filter @easy-plugin/builder check && pnpm --filter @easy-plugin/frontend check",
     "dev": "pnpm --filter @easy-plugin/frontend dev",
     "generate": "pnpm builder:build && pnpm exec plugin generate",
+    "template:init": "pnpm builder:build && node runtime/tools/initialize-template.mjs && pnpm exec plugin generate",
     "test": "pnpm --filter @easy-plugin/builder test && pnpm --filter @easy-plugin/frontend test"
   },
   "devDependencies": {

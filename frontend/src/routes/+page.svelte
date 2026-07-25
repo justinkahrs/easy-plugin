@@ -7,6 +7,7 @@
   import VisualizationPanel from '$lib/components/VisualizationPanel.svelte';
   import {
     getParameterMetadata,
+    pluginMetadata,
     svelteParameterGroups,
     svelteParameterMetadata,
     type SvelteParameterMetadata
@@ -34,7 +35,6 @@
   let stateController: StatePresetController | undefined;
   let visualizationController: VisualizationController | undefined;
   let parameterValues = {} as ParameterValues;
-  let pluginState: Readonly<Record<string, unknown>> = {};
   let presets: readonly PresetInfo[] = [];
   let currentPreset: PresetStatus = { dirty: false };
   let status: 'loading' | 'ready' | 'error' = 'loading';
@@ -45,6 +45,11 @@
 
   const controls: readonly SvelteParameterMetadata[] = svelteParameterMetadata;
   const ungroupedControls = controls.filter((control) => control.groupId === null);
+  const showVisualization =
+    pluginMetadata.features.transport ||
+    pluginMetadata.features.meters ||
+    pluginMetadata.features.analyzer;
+  const showPresets = pluginMetadata.features.presets;
 
   onMount(() => {
     bridge = createRuntimeBridge();
@@ -57,9 +62,6 @@
     });
     const unsubscribeError = controller.error.subscribe((error) => {
       if (error !== undefined) errorMessage = `${error.code}: ${error.message}`;
-    });
-    const unsubscribePluginState = stateController.pluginState.subscribe((value) => {
-      pluginState = value;
     });
     const unsubscribePresets = stateController.presets.subscribe((value) => {
       presets = value;
@@ -99,7 +101,6 @@
       active = false;
       unsubscribeValues();
       unsubscribeError();
-      unsubscribePluginState();
       unsubscribePresets();
       unsubscribeCurrentPreset();
       unsubscribeStateError();
@@ -116,23 +117,25 @@
 </script>
 
 <svelte:head>
-  <title>Super Filter</title>
-  <meta name="description" content="Manifest-generated JUCE parameters in a Svelte editor." />
+  <title>{pluginMetadata.name}</title>
+  <meta name="description" content={pluginMetadata.description} />
 </svelte:head>
 
 <main>
   <header>
     <div class="header-meta">
-      <p class="eyebrow">Example Audio / Super Filter</p>
+      <p class="eyebrow">{pluginMetadata.manufacturer.name} / {pluginMetadata.name}</p>
       <div class="connection" class:ready={status === 'ready'}>
         <span aria-hidden="true"></span>
         {status === 'ready' ? 'Host synchronized' : status === 'error' ? 'Runtime error' : 'Awaiting snapshot'}
       </div>
     </div>
-    <VisualizationPanel {transport} {meters} {analyzer} />
+    {#if showVisualization}
+      <VisualizationPanel {transport} {meters} {analyzer} />
+    {/if}
   </header>
 
-  <section class="workspace" aria-label="Plugin parameters">
+  <section class="workspace" class:without-sidebar={!showPresets} aria-label="Plugin parameters">
     <div class="parameter-panel">
       {#if status === 'loading'}
         <p class="empty-state">Connecting to native state…</p>
@@ -173,20 +176,21 @@
       {/if}
     </div>
 
-    <aside aria-label="State and presets">
-      {#if errorMessage && status !== 'error'}
-        <p class="inline-error" role="alert">{errorMessage}</p>
-      {/if}
+    {#if showPresets}
+      <aside aria-label="State and presets">
+        {#if errorMessage && status !== 'error'}
+          <p class="inline-error" role="alert">{errorMessage}</p>
+        {/if}
 
-      {#if stateController && status === 'ready'}
-        <PresetBrowser
-          controller={stateController}
-          {presets}
-          current={currentPreset}
-          analyzerEnabled={pluginState['analyzerEnabled'] === true}
-        />
-      {/if}
-    </aside>
+        {#if stateController && status === 'ready'}
+          <PresetBrowser
+            controller={stateController}
+            {presets}
+            current={currentPreset}
+          />
+        {/if}
+      </aside>
+    {/if}
   </section>
 </main>
 
@@ -265,6 +269,7 @@
     min-height: 0;
     overflow: hidden;
   }
+  .workspace.without-sidebar { grid-template-columns: minmax(0, 1fr); }
   .parameter-panel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

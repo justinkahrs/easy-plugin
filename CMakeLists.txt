@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 project(
   EasyPlugin
   VERSION 0.1.0
-  DESCRIPTION "JUCE 8 and SvelteKit audio plugin bootstrap"
+  DESCRIPTION "Schema-driven JUCE 8 and SvelteKit audio plugin template"
   LANGUAGES C CXX
 )
 
@@ -36,7 +36,7 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY CMAKE_CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/plugin.example.yaml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/plugin.yaml"
     "${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.cmake"
 )
 
@@ -58,6 +58,7 @@ list(
   "${EASY_PLUGIN_FRONTEND_DIR}/vite.config.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/BridgeTypes.generated.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/ParameterMetadata.generated.ts"
+  "${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/StateMetadata.generated.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/SvelteParameterMetadata.generated.ts"
   "${EASY_PLUGIN_EMBED_TOOL}"

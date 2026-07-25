@@ -1,5 +1,7 @@
 # Milestone Prompt: Repository Bootstrap
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 0 and 1 from `IMPLEMENTATION_PLAN.md`.
 
 Read these files first:

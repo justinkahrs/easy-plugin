@@ -1,5 +1,7 @@
 # Acceptance Tests
 
+> Archived construction document. It records the original framework acceptance plan.
+
 ## Test philosophy
 
 Acceptance tests verify that generated projects behave correctly in real plugin conditions.

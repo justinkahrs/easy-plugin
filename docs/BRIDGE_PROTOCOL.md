@@ -1,5 +1,7 @@
 # Bridge Protocol
 
+This protocol is implemented by the reusable native runtime and frontend bridge.
+
 ## Purpose
 
 The bridge connects the SvelteKit editor to the JUCE runtime.

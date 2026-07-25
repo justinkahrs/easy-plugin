@@ -1,5 +1,7 @@
 # Architecture
 
+This is the runtime architecture reference for plugins created from the template.
+
 ## System overview
 
 The builder consists of four conceptual layers:

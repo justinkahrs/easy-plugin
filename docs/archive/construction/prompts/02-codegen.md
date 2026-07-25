@@ -1,5 +1,7 @@
 # Milestone Prompt: Schema and Code Generation
 
+> Archived prompt used to construct the original template.
+
 Implement Milestones 2 and 3 from `IMPLEMENTATION_PLAN.md`.
 
 Read all specification files before changing code.

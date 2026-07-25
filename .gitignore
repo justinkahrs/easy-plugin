@@ -1,6 +1,7 @@
 .DS_Store
 .cache/
 .idea/
+.playwright-cli/
 .vscode/
 
 build/

@@ -1,5 +1,7 @@
 # Product Specification
 
+> Archived construction document for the original template-builder product.
+
 ## Product
 
 A command-line tool and reusable project template for generating production-ready JUCE audio plugins with a SvelteKit user interface from a declarative manifest.
