@@ -5,7 +5,7 @@
 
   export let parameter: ParameterMetadata;
   export let normalizedValue: number;
-  export let controller: ParameterController;
+  export let controller: ParameterController;``
 
   let gestureActive = false;
 
