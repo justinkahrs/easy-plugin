@@ -276,6 +276,9 @@ if(BUILD_TESTING)
         juce::juce_audio_utils
         juce::juce_gui_extra
     )
+    if(WIN32)
+      target_link_libraries(easy_plugin_runtime_tests PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       easy_plugin_runtime_tests
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"
@@ -318,6 +321,9 @@ if(BUILD_TESTING)
         EasyPluginPlugin
         juce::juce_audio_utils
     )
+    if(WIN32)
+      target_link_libraries(tests_transport_visualization PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       tests_transport_visualization
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"
@@ -340,6 +346,9 @@ if(BUILD_TESTING)
         juce::juce_audio_utils
         juce::juce_gui_extra
     )
+    if(WIN32)
+      target_link_libraries(tests_state_presets PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       tests_state_presets
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"
