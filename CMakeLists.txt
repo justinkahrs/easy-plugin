@@ -19,11 +19,16 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 option(EASY_PLUGIN_BUILD_STANDALONE "Build the JUCE plugin formats and standalone application" ON)
 
 find_program(EASY_PLUGIN_NODE_EXECUTABLE NAMES node REQUIRED)
-find_program(EASY_PLUGIN_PNPM_EXECUTABLE NAMES pnpm REQUIRED)
+if(WIN32)
+  find_program(EASY_PLUGIN_PNPM_EXECUTABLE NAMES pnpm.cmd REQUIRED)
+else()
+  find_program(EASY_PLUGIN_PNPM_EXECUTABLE NAMES pnpm REQUIRED)
+endif()
 
 set(EASY_PLUGIN_FRONTEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
 set(EASY_PLUGIN_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated")
 set(EASY_PLUGIN_EMBED_TOOL "${CMAKE_CURRENT_SOURCE_DIR}/runtime/tools/embed-frontend.mjs")
+set(EASY_PLUGIN_BUILD_AND_EMBED_TOOL "${CMAKE_CURRENT_SOURCE_DIR}/runtime/tools/build-and-embed-frontend.cmake")
 set(EASY_PLUGIN_EMBED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/frontend")
 set(EASY_PLUGIN_EMBED_HEADER "${EASY_PLUGIN_EMBED_DIR}/FrontendAssets.h")
 set(EASY_PLUGIN_EMBED_SOURCE "${EASY_PLUGIN_EMBED_DIR}/FrontendAssets.cpp")
@@ -32,6 +37,14 @@ if(NOT EXISTS "${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.cmake")
   message(FATAL_ERROR "Generated plugin metadata is missing. Run `pnpm generate` before configuring CMake.")
 endif()
 include("${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.cmake")
+if(APPLE AND EASY_PLUGIN_MACOS_UNIVERSAL_BINARY)
+  set(
+    CMAKE_OSX_ARCHITECTURES
+    "${EASY_PLUGIN_MACOS_ARCHITECTURES}"
+    CACHE STRING "Architectures required by the plugin manifest"
+    FORCE
+  )
+endif()
 set_property(
   DIRECTORY
   APPEND
@@ -61,19 +74,22 @@ list(
   "${EASY_PLUGIN_GENERATED_DIR}/PluginMetadata.generated.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/StateMetadata.generated.ts"
   "${EASY_PLUGIN_GENERATED_DIR}/SvelteParameterMetadata.generated.ts"
+  "${EASY_PLUGIN_BUILD_AND_EMBED_TOOL}"
   "${EASY_PLUGIN_EMBED_TOOL}"
 )
 
 add_custom_command(
   OUTPUT "${EASY_PLUGIN_EMBED_HEADER}" "${EASY_PLUGIN_EMBED_SOURCE}"
-  COMMAND "${CMAKE_COMMAND}" -E make_directory "${EASY_PLUGIN_EMBED_DIR}"
-  COMMAND "${EASY_PLUGIN_PNPM_EXECUTABLE}" --dir "${EASY_PLUGIN_FRONTEND_DIR}" build
   COMMAND
-    "${EASY_PLUGIN_NODE_EXECUTABLE}"
-    "${EASY_PLUGIN_EMBED_TOOL}"
-    --input "${EASY_PLUGIN_FRONTEND_DIR}/build"
-    --header "${EASY_PLUGIN_EMBED_HEADER}"
-    --source "${EASY_PLUGIN_EMBED_SOURCE}"
+    "${CMAKE_COMMAND}"
+    "-DEASY_PLUGIN_PNPM_EXECUTABLE=${EASY_PLUGIN_PNPM_EXECUTABLE}"
+    "-DEASY_PLUGIN_NODE_EXECUTABLE=${EASY_PLUGIN_NODE_EXECUTABLE}"
+    "-DEASY_PLUGIN_FRONTEND_DIR=${EASY_PLUGIN_FRONTEND_DIR}"
+    "-DEASY_PLUGIN_EMBED_TOOL=${EASY_PLUGIN_EMBED_TOOL}"
+    "-DEASY_PLUGIN_EMBED_DIR=${EASY_PLUGIN_EMBED_DIR}"
+    "-DEASY_PLUGIN_EMBED_HEADER=${EASY_PLUGIN_EMBED_HEADER}"
+    "-DEASY_PLUGIN_EMBED_SOURCE=${EASY_PLUGIN_EMBED_SOURCE}"
+    -P "${EASY_PLUGIN_BUILD_AND_EMBED_TOOL}"
   DEPENDS ${EASY_PLUGIN_FRONTEND_INPUTS}
   COMMENT "Building and embedding the static SvelteKit frontend"
   VERBATIM
@@ -154,6 +170,7 @@ if(EASY_PLUGIN_BUILD_STANDALONE)
       generated/StateMetadata.generated.h
       runtime/native/BridgeDispatcher.cpp
       runtime/native/BridgeDispatcher.h
+      runtime/native/BridgeExtension.h
       runtime/native/ParameterService.cpp
       runtime/native/ParameterService.h
       runtime/native/PresetService.cpp
@@ -259,6 +276,9 @@ if(BUILD_TESTING)
         juce::juce_audio_utils
         juce::juce_gui_extra
     )
+    if(WIN32)
+      target_link_libraries(easy_plugin_runtime_tests PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       easy_plugin_runtime_tests
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"
@@ -301,6 +321,9 @@ if(BUILD_TESTING)
         EasyPluginPlugin
         juce::juce_audio_utils
     )
+    if(WIN32)
+      target_link_libraries(tests_transport_visualization PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       tests_transport_visualization
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"
@@ -323,6 +346,9 @@ if(BUILD_TESTING)
         juce::juce_audio_utils
         juce::juce_gui_extra
     )
+    if(WIN32)
+      target_link_libraries(tests_state_presets PRIVATE juce::juce_webview2)
+    endif()
     set_target_properties(
       tests_state_presets
       PROPERTIES COMPILE_WARNING_AS_ERROR "${EASY_PLUGIN_WARNINGS_AS_ERRORS}"

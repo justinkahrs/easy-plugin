@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BridgeExtension.h"
 #include "ParameterService.h"
 #include "PresetService.h"
 #include "StateService.h"
@@ -20,7 +21,8 @@ public:
 class BridgeDispatcher final : private ParameterService::Listener,
                                private StateService::Listener,
                                private PresetService::Listener,
-                               private VisualizationService::Listener
+                               private VisualizationService::Listener,
+                               private BridgeExtension::EventSink
 {
 public:
     static constexpr int protocolVersion = 1;
@@ -32,7 +34,8 @@ public:
         PresetService& presets,
         TransportService& transport,
         VisualizationService& visualization,
-        BridgeEventSink& eventSink);
+        BridgeEventSink& eventSink,
+        BridgeExtension* extension = nullptr);
     ~BridgeDispatcher() override;
 
     void frontendLoaded();
@@ -60,6 +63,9 @@ private:
         const VisualizationService::AnalyzerFrame& frame,
         std::uint64_t sequence,
         double timestamp) override;
+    void emitExtensionEvent(
+        juce::var payload,
+        const juce::String& requestId) override;
 
     void emitPayload(juce::var payload, const juce::String& requestId = {});
     void emitReady();
@@ -97,6 +103,7 @@ private:
     TransportService& transport;
     VisualizationService& visualization;
     BridgeEventSink& eventSink;
+    BridgeExtension* extension{};
     bool frontendReady{};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BridgeDispatcher)

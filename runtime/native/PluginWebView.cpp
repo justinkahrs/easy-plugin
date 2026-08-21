@@ -42,9 +42,10 @@ PluginWebView::PluginWebView(
     PresetService& presets,
     TransportService& transport,
     VisualizationService& visualization,
-    const juce::String& instanceIdIn)
+    const juce::String& instanceIdIn,
+    BridgeExtension* extension)
     : instanceId(instanceIdIn),
-      dispatcher(instanceId, parameters, state, presets, transport, visualization, *this)
+      dispatcher(instanceId, parameters, state, presets, transport, visualization, *this, extension)
 {
     browser = std::make_unique<Browser>(createBrowserOptions());
     addAndMakeVisible(*browser);

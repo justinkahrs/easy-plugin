@@ -45,7 +45,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm generate
-      - run: cmake --preset release
+      - name: Install WebView2 SDK
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          nuget install Microsoft.Web.WebView2
+          -Version 1.0.3485.44
+          -OutputDirectory "${{ runner.temp }}/webview2"
+          -NonInteractive
+      - run: cmake --preset release -DJUCE_WEBVIEW2_PACKAGE_LOCATION="${{ runner.temp }}/webview2"
       - run: cmake --build --preset release --parallel 2
       - run: ctest --preset release
       - run: pnpm exec plugin validate --build-vst3-validator
